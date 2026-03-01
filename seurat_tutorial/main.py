@@ -10,6 +10,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent))
 
 from wrappers import read_10x, create_seurat_object
+from wrappers import percentage_feature_set, add_metadata_column, vln_plot, save_plot
 
 
 def main():
@@ -38,6 +39,24 @@ def main():
     # Display the Seurat object summary
     print("\nSeurat object summary:")
     print(pbmc)
+
+    # The [[ operator can add columns to object metadata.
+    # This is a great place to stash QC stats
+    print("\nCalculating QC metrics (percent.mt)...")
+    percent_mt = percentage_feature_set(pbmc, pattern="^MT-")
+    pbmc = add_metadata_column(pbmc, "percent.mt", percent_mt)
+
+    print("Seurat object after QC metrics:")
+    print(pbmc)
+
+    # Visualize QC metrics as a violin plot and save to file
+    print("\nVisualizing QC metrics (violin plots)...")
+    plot_obj = vln_plot(pbmc, features=["nFeature_RNA", "nCount_RNA", "percent.mt"], ncol=3)
+    out_dir = script_dir.parent / "plots"
+    out_dir.mkdir(parents=True, exist_ok=True)
+    out_file = out_dir / "qc_vln.png"
+    save_plot(plot_obj, str(out_file), width=10, height=4, dpi=300)
+    print(f"Saved violin plot to: {out_file}")
 
 
 if __name__ == "__main__":

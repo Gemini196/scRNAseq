@@ -166,4 +166,118 @@ def find_clusters(seurat_obj, resolution=0.8, **kwargs):
     return robjects.r.FindClusters(seurat_obj, resolution=resolution, **kwargs)
 
 
+def percentage_feature_set(seurat_obj, pattern=None, assay="RNA"):
+    """Wrap Seurat::PercentageFeatureSet.
+
+    Calculates the percentage of reads that map to a set of features.
+    Commonly used to calculate mitochondrial content (pattern="^MT-").
+
+    Parameters
+    ----------
+    seurat_obj : R object
+        A Seurat object.
+    pattern : str
+        Regex pattern to identify features of interest (e.g., "^MT-" for
+        mitochondrial genes).
+    assay : str
+        Assay to use for calculating percentages. Defaults to "RNA".
+
+    Returns
+    -------
+    array-like
+        A vector of percentages that can be assigned to object metadata.
+    """
+    return robjects.r.PercentageFeatureSet(seurat_obj, pattern=pattern, assay=assay)
+
+
+def add_metadata_column(seurat_obj, col_name, col_data):
+    """Add a column to Seurat object metadata using the [[ operator.
+
+    Parameters
+    ----------
+    seurat_obj : R object
+        A Seurat object.
+    col_name : str
+        Name of the metadata column to add (e.g., "percent.mt").
+    col_data : array-like
+        Data to add as the column.
+
+    Returns
+    -------
+    R object
+        The Seurat object with the new metadata column added.
+    """
+    # Use temporary names in the R global environment to perform the assignment
+    tmp_obj = ".py_tmp_obj"
+    tmp_col = ".py_tmp_col"
+    # assign objects to R global environment (rpy2 will convert Python lists/vectors)
+    robjects.globalenv[tmp_obj] = seurat_obj
+    robjects.globalenv[tmp_col] = col_data
+    # perform the metadata assignment in R
+    robjects.r(f"{tmp_obj}[[\"{col_name}\"]] <- {tmp_col}")
+    # fetch the updated object back
+    updated = robjects.globalenv[tmp_obj]
+    # cleanup temporary names
+    del robjects.globalenv[tmp_col]
+    del robjects.globalenv[tmp_obj]
+    return updated
+
+
+
+def vln_plot(seurat_obj, features, ncol=3, **kwargs):
+    """Wrap Seurat::VlnPlot to visualize features as violin plots.
+
+    Parameters
+    ----------
+    seurat_obj : R object
+        A Seurat object.
+    features : list[str]
+        List of feature names to plot (e.g., ["nFeature_RNA", "nCount_RNA", "percent.mt"]).
+    ncol : int
+        Number of columns in the plot layout.
+
+    Returns
+    -------
+    R object
+        The ggplot/patchwork object returned by VlnPlot.
+    """
+    feats = robjects.StrVector(features)
+    return robjects.r.VlnPlot(seurat_obj, features=feats, ncol=ncol, **kwargs)
+
+
+def save_plot(plot_obj, filename, width=12, height=4, dpi=300):
+    """Save an R ggplot/patchwork object to a file using ggsave.
+
+    Parameters
+    ----------
+    plot_obj : R object
+        The ggplot/patchwork object returned by plotting functions.
+    filename : str
+        Output filename (PNG, PDF, etc.). Provide full or relative path.
+    width : float
+        Width in inches.
+    height : float
+        Height in inches.
+    dpi : int
+        Resolution for raster outputs.
+    """
+    # assign temporary names in R globalenv and call ggsave
+    robjects.globalenv[".py_plot_obj"] = plot_obj
+    robjects.globalenv[".py_plot_fname"] = filename
+    # ensure ggplot2 (and patchwork if used) are available
+    try:
+        robjects.r("library(ggplot2)")
+    except Exception:
+        pass
+    try:
+        robjects.r("library(patchwork)")
+    except Exception:
+        pass
+    # call ggsave; use the variables from globalenv
+    robjects.r(f'ggsave(filename = .py_plot_fname, plot = .py_plot_obj, width = {width}, height = {height}, dpi = {dpi})')
+    # cleanup
+    del robjects.globalenv[".py_plot_obj"]
+    del robjects.globalenv[".py_plot_fname"]
+
+
 
