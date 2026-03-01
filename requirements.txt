@@ -1,0 +1,10 @@
+# project dependencies
+rpy2>=3.5.0
+pandas>=2.0
+
+# Note: R packages are not managed here.  For example, install the R
+# 'languageserver' package separately with
+#     R -e 'install.packages("languageserver")'
+# (see README.md for more details)
+
+# add any other libraries your code uses
