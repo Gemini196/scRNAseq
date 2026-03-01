@@ -17,16 +17,14 @@ This repository primarily contains Python code, but some workflows leverage R. T
    Run these commands in an R session (or RStudio):
 
    ```r
-   install.packages("Seurat")
-   install.packages("languageserver")
-   library(Seurat)
-   library(languageserver)
+   install.packages(c("Seurat", "languageserver"))
+   library(Seurat); library(languageserver)
    ```
 
    Or as a one-liner from the shell:
 
    ```sh
-   R -e 'install.packages(c("Seurat", "languageserver"))'
+   R -e 'install.packages(c("Seurat", "languageserver")) && R -e "library(Seurat); library(languageserver)"'
    ```
 
    > You can also add R package requirements to a `DESCRIPTION` file or use `renv`/`packrat` for
