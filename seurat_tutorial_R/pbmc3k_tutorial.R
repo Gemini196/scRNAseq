@@ -14,7 +14,7 @@ library(patchwork)
 
 
 # Load the PBMC dataset (from Single Cell RNA sequencing)
-pbmc.data <- Read10X(data.dir = "filtered_gene_bc_matrices/hg19/")
+pbmc.data <- Read10X(data.dir = "data/filtered_gene_bc_matrices/hg19/")
 
 # Initialize the Seurat object with the raw (non-normalized) data.
 # Chooses features (genes) that are expressed in at least 200 cells, and cells that have at least 3 features expressed.
