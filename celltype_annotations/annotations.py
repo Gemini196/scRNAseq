@@ -9,6 +9,7 @@ import numpy as np
 from scvi.external import CellAssign
 import celltypist as ct
 import decoupler as dc
+import celltypeai as cta
 
 sc.set_figure_params(dpi=50, facecolor="white")
 
@@ -259,6 +260,25 @@ def main():
     )
 
     # =========================
+    # Automatic label prediction with CellTypeAI
+    # =========================
+    cta.cell_annotator(
+                "Human",
+                "Immune system",
+                adata,
+                model="phi4:14b",
+                num_genes=200,
+                n_iterations=1, #recommended:3
+            )
+
+    sc.pl.umap(
+        adata,
+        color="cell_type_ai",
+        ncols=1,
+        size=3,
+        )
+
+    # =========================
     # Automatic label prediction with CellTypist
     # =========================
     ct.models.download_models(model=["Immune_All_Low.pkl"], force_update=True)
@@ -356,7 +376,7 @@ def main():
     # -------------------------
     sc.pl.umap(
         adata,
-        color=["majority_voting", "cellassign_labels", "dc_anno"],
+        color=["majority_voting", "cellassign_labels", "dc_anno", "cell_type_ai"],
         wspace=0.4,   # space between plots
         ncols=2,      # ensures side-by-side layout
         size=3,
